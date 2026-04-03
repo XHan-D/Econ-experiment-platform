@@ -7,6 +7,9 @@ export default function Home() {
         <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[32px] border border-white/40 bg-white/70 p-10 shadow-2xl backdrop-blur">
             <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Behavioral Economics Lab</p>
+            <div className="mt-4 inline-flex rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900">
+              本地工作流测试：这一条是新改的
+            </div>
             <h1 className="mt-4 font-serif text-5xl leading-tight">AI 辅助工作经济学实验平台</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
               这是正式产品路线的起点。接下来我们会把它扩成真正可上线的实验系统，而不是开发草稿。
