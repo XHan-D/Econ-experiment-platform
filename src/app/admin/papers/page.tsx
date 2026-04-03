@@ -1,38 +1,96 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
 import { AdminShell } from "@/app/admin/shell";
-import { papers } from "@/app/platform-data";
+import { PaperRecord, useAdminStore } from "@/app/admin/use-admin-store";
+
+const blankPaper: PaperRecord = {
+  title: "",
+  sections: "",
+  note: "",
+};
 
 export default function PapersPage() {
+  const { store, setPapers } = useAdminStore();
+  const [draft, setDraft] = useState<PaperRecord>(blankPaper);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!draft.title.trim()) return;
+    setPapers([...store.papers, { ...draft, title: draft.title.trim() }]);
+    setDraft(blankPaper);
+  }
+
+  function updatePaper(index: number, patch: Partial<PaperRecord>) {
+    setPapers(store.papers.map((paper, paperIndex) => (paperIndex === index ? { ...paper, ...patch } : paper)));
+  }
+
+  function removePaper(index: number) {
+    setPapers(store.papers.filter((_, paperIndex) => paperIndex !== index));
+  }
+
   return (
     <AdminShell
       title="试卷与题目"
-      description="参考旧操作手册里“试卷管理 / 题目管理”的拆分，但这里把它们放进同一条编辑链路：先定试卷，再挂载题目与模块。"
+      description="现在这页已经能直接新增和修改试卷。下一步我会把每张试卷继续细化到题目级配置。"
     >
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <section className="rounded-[28px] border border-white/60 bg-white/80 p-7 shadow-lg">
-          <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Papers</p>
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <form onSubmit={handleSubmit} className="rounded-[28px] border border-white/60 bg-white/80 p-7 shadow-lg">
+          <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Create Paper</p>
           <div className="mt-5 space-y-4">
-            {papers.map((paper) => (
-              <article key={paper.title} className="rounded-[24px] bg-stone-50 p-6">
-                <h3 className="font-serif text-2xl">{paper.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-stone-600">{paper.sections}</p>
-                <p className="mt-3 text-sm leading-6 text-stone-500">{paper.note}</p>
-              </article>
-            ))}
+            <input
+              value={draft.title}
+              onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+              className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
+              placeholder="试卷名称"
+            />
+            <textarea
+              value={draft.sections}
+              onChange={(event) => setDraft({ ...draft, sections: event.target.value })}
+              className="min-h-28 w-full rounded-[22px] border border-stone-200 bg-white px-4 py-3 outline-none"
+              placeholder="模块结构，例如：知情同意 / 激励说明 / 三个任务 / 终问卷"
+            />
+            <textarea
+              value={draft.note}
+              onChange={(event) => setDraft({ ...draft, note: event.target.value })}
+              className="min-h-24 w-full rounded-[22px] border border-stone-200 bg-white px-4 py-3 outline-none"
+              placeholder="备注"
+            />
           </div>
-        </section>
+          <button className="mt-6 rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-stone-700">
+            新增试卷
+          </button>
+        </form>
 
         <section className="rounded-[28px] border border-white/60 bg-white/80 p-7 shadow-lg">
-          <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Question Types</p>
-          <div className="mt-5 space-y-4 text-sm leading-7 text-stone-600">
-            <div className="rounded-[24px] border border-stone-200 bg-stone-50 p-5">
-              单选 / 多选 / 量表 / 开放题 / 多题任务 / 长文本作答
-            </div>
-            <div className="rounded-[24px] border border-stone-200 bg-stone-50 p-5">
-              支持任务前说明页、最短阅读时长、是否展示 AI 区域、是否显示正计时或倒计时。
-            </div>
-            <div className="rounded-[24px] border border-stone-200 bg-stone-50 p-5">
-              下一步接配置表后，会支持复制试卷、复制题目、批量导入与版本化。
-            </div>
+          <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Editable Papers</p>
+          <div className="mt-5 space-y-4">
+            {store.papers.map((paper, index) => (
+              <article key={`${paper.title}-${index}`} className="rounded-[24px] bg-stone-50 p-5">
+                <input
+                  value={paper.title}
+                  onChange={(event) => updatePaper(index, { title: event.target.value })}
+                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 font-serif text-xl outline-none"
+                />
+                <textarea
+                  value={paper.sections}
+                  onChange={(event) => updatePaper(index, { sections: event.target.value })}
+                  className="mt-4 min-h-24 w-full rounded-[22px] border border-stone-200 bg-white px-4 py-3 text-sm outline-none"
+                />
+                <textarea
+                  value={paper.note}
+                  onChange={(event) => updatePaper(index, { note: event.target.value })}
+                  className="mt-4 min-h-20 w-full rounded-[22px] border border-stone-200 bg-white px-4 py-3 text-sm outline-none"
+                />
+                <button
+                  onClick={() => removePaper(index)}
+                  className="mt-4 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                >
+                  删除
+                </button>
+              </article>
+            ))}
           </div>
         </section>
       </div>

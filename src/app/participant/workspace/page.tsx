@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 const answered = [1, 2, 3, 4];
 
 const promptPanels = [
@@ -7,6 +11,10 @@ const promptPanels = [
 ];
 
 export default function ParticipantWorkspacePage() {
+  const [aiOpen, setAiOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [answer, setAnswer] = useState("");
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_18%),linear-gradient(135deg,#edf3ff_0%,#dce6fa_42%,#f6efe5_100%)] px-4 py-5 text-stone-900 md:px-8">
       <div className="mx-auto max-w-[1500px]">
@@ -59,14 +67,21 @@ export default function ParticipantWorkspacePage() {
             <label className="mt-6 block">
               <span className="mb-3 block text-sm font-medium text-stone-700">正式作答区</span>
               <textarea
+                value={answer}
+                onChange={(event) => setAnswer(event.target.value)}
                 className="min-h-[380px] w-full rounded-[28px] border border-stone-200 bg-white px-5 py-4 text-sm leading-7 outline-none transition focus:border-blue-300"
                 placeholder="在这里输入修改后的正式新闻稿。后续会接自动保存、断线恢复和提交锁定。"
               />
             </label>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-              <div className="text-sm text-stone-500">评分标准：硬性错误改正 80 分，文段写作水平 20 分。</div>
-              <button className="rounded-full bg-blue-600 px-8 py-3 text-sm font-medium text-white shadow-lg shadow-blue-900/20 transition hover:bg-blue-500">
+              <div className="text-sm text-stone-500">
+                评分标准：硬性错误改正 80 分，文段写作水平 20 分。当前已输入 {answer.length} 字。
+              </div>
+              <button
+                onClick={() => setCurrentStep((value) => Math.min(value + 1, 10))}
+                className="rounded-full bg-blue-600 px-8 py-3 text-sm font-medium text-white shadow-lg shadow-blue-900/20 transition hover:bg-blue-500"
+              >
                 下一题
               </button>
             </div>
@@ -83,18 +98,22 @@ export default function ParticipantWorkspacePage() {
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
                 {Array.from({ length: 10 }, (_, index) => index + 1).map((step) => {
-                  const done = answered.includes(step);
+                  const done = answered.includes(step) || step < currentStep;
+                  const active = step === currentStep;
                   return (
-                    <div
+                    <button
                       key={step}
+                      onClick={() => setCurrentStep(step)}
                       className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm font-medium ${
-                        done
-                          ? "border-blue-300 bg-blue-100 text-blue-800"
-                          : "border-stone-200 bg-white text-stone-500"
+                        active
+                          ? "border-stone-900 bg-stone-900 text-white"
+                          : done
+                            ? "border-blue-300 bg-blue-100 text-blue-800"
+                            : "border-stone-200 bg-white text-stone-500"
                       }`}
                     >
                       {step}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -106,8 +125,11 @@ export default function ParticipantWorkspacePage() {
                   <p className="text-sm text-stone-500">AI 互动区域</p>
                   <h2 className="mt-2 font-serif text-3xl">A 组可选开启</h2>
                 </div>
-                <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500">
-                  开启 AI 对话
+                <button
+                  onClick={() => setAiOpen((value) => !value)}
+                  className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                >
+                  {aiOpen ? "关闭 AI 对话" : "开启 AI 对话"}
                 </button>
               </div>
 
@@ -119,7 +141,16 @@ export default function ParticipantWorkspacePage() {
               </div>
 
               <div className="mt-5 min-h-[300px] rounded-[26px] border border-stone-200 bg-white p-5 text-sm leading-7 text-stone-500">
-                这里后续会展示真实的 AI 会话记录、轮次、时间戳与模型信息。B 组在同位置不会显示任何 AI 交互入口。
+                {aiOpen ? (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl bg-stone-50 p-4">被试：请帮我指出这篇新闻稿里的明显错误。</div>
+                    <div className="rounded-2xl bg-blue-50 p-4 text-stone-700">
+                      AI：目前我能看到标题拼写错误、重复描述和演讲总时长计算错误。
+                    </div>
+                  </div>
+                ) : (
+                  "当前未开启 AI 对话。B 组在同位置不会显示任何 AI 交互入口。"
+                )}
               </div>
             </section>
           </aside>
