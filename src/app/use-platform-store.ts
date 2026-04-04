@@ -6,6 +6,7 @@ export type ExamConfig = {
   id: string;
   name: string;
   status: string;
+  participants: number;
   tasks: number;
   questionnaires: number;
   incentiveNote: string;
@@ -124,6 +125,7 @@ const seedStore: PlatformStore = {
       id: "exam-main",
       name: "Economic Incentives, AI, and Labor Productivity",
       status: "试运行中",
+      participants: 128,
       tasks: 3,
       questionnaires: 2,
       incentiveNote: "A/B × I/II/III 六组，任务内 AI 受控接入。",
