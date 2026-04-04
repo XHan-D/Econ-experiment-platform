@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { usePlatformStore } from "@/app/use-platform-store";
+import { usePlatformStore, type AiMessage } from "@/app/use-platform-store";
 
 const stageLabels = ["知情同意", "基本信息", "任务一", "任务一反馈", "任务二", "任务二反馈", "任务三", "任务三反馈", "最终问卷", "完成提交"];
 
@@ -252,8 +252,8 @@ export default function ParticipantPage() {
                                         usedAi: true,
                                         aiMessages: [
                                           ...item.aiMessages,
-                                          { role: "user", content: draftMessage.trim(), timestamp: new Date().toISOString() },
-                                          { role: "assistant", content: aiReply(currentTask.title), timestamp: new Date().toISOString() },
+                                          { role: "user", content: draftMessage.trim(), timestamp: new Date().toISOString() } as AiMessage,
+                                          { role: "assistant", content: aiReply(currentTask.title), timestamp: new Date().toISOString() } as AiMessage,
                                         ],
                                       }
                                     : item
