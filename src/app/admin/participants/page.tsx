@@ -7,6 +7,8 @@ import { ParticipantRecord, useAdminStore } from "@/app/admin/use-admin-store";
 
 const blankParticipant: ParticipantRecord = {
   id: "",
+  password: "123456",
+  name: "",
   session: "",
   group: "A-I",
   paper: "",
@@ -47,6 +49,18 @@ export default function ParticipantsPage() {
               onChange={(event) => setDraft({ ...draft, id: event.target.value })}
               className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
               placeholder="被试编号"
+            />
+            <input
+              value={draft.name}
+              onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+              className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
+              placeholder="被试姓名或备注名"
+            />
+            <input
+              value={draft.password}
+              onChange={(event) => setDraft({ ...draft, password: event.target.value })}
+              className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
+              placeholder="登录密码"
             />
             <input
               value={draft.session}
@@ -96,6 +110,16 @@ export default function ParticipantsPage() {
                 />
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <input
+                  value={participant.name}
+                  onChange={(event) => updateParticipant(index, { name: event.target.value })}
+                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
+                />
+                <input
+                  value={participant.password}
+                  onChange={(event) => updateParticipant(index, { password: event.target.value })}
+                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none"
+                />
                 <select
                   value={participant.group}
                   onChange={(event) => updateParticipant(index, { group: event.target.value })}

@@ -1,159 +1,168 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import {
-  exams as defaultExams,
-  exportSets as defaultExportSets,
-  groupCards as defaultGroups,
-  papers as defaultPapers,
-  participants as defaultParticipants,
-  sessions as defaultSessions,
-} from "@/app/platform-data";
+import { usePlatformStore } from "@/app/use-platform-store";
 
 export type ExamRecord = {
+  id?: string;
   name: string;
   status: string;
   participants: number;
   tasks: number;
   questionnaires: number;
+  incentiveNote?: string;
 };
-
 export type GroupRecord = {
   code: string;
   title: string;
   note: string;
   probability: string;
 };
-
 export type PaperRecord = {
+  id?: string;
   title: string;
   sections: string;
   note: string;
 };
-
 export type SessionRecord = {
+  id?: string;
   name: string;
   room: string;
   capacity: string;
   progress: string;
 };
-
 export type ParticipantRecord = {
   id: string;
+  password: string;
+  name: string;
   session: string;
   group: string;
   paper: string;
   status: string;
   abnormal: string;
 };
-
 export type ExportRecord = {
   title: string;
   detail: string;
 };
 
-export type AdminStore = {
-  exams: ExamRecord[];
-  groups: GroupRecord[];
-  papers: PaperRecord[];
-  sessions: SessionRecord[];
-  participants: ParticipantRecord[];
-  exportSets: ExportRecord[];
-};
-
-const STORAGE_KEY = "econ-platform-admin-store-v1";
-
-const defaultStore: AdminStore = {
-  exams: defaultExams,
-  groups: defaultGroups,
-  papers: defaultPapers,
-  sessions: defaultSessions,
-  participants: defaultParticipants,
-  exportSets: defaultExportSets,
-};
-
-function readStore(): AdminStore {
-  if (typeof window === "undefined") {
-    return defaultStore;
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return defaultStore;
-  }
-
-  try {
-    return { ...defaultStore, ...JSON.parse(raw) } as AdminStore;
-  } catch {
-    return defaultStore;
-  }
-}
-
-function writeStore(store: AdminStore) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-  window.dispatchEvent(new Event("econ-admin-store-updated"));
-}
-
 export function useAdminStore() {
-  const [store, setStore] = useState<AdminStore>(defaultStore);
-  const [ready, setReady] = useState(false);
+  const platform = usePlatformStore();
 
-  useEffect(() => {
-    const sync = () => {
-      setStore(readStore());
-      setReady(true);
-    };
-
-    sync();
-    window.addEventListener("storage", sync);
-    window.addEventListener("econ-admin-store-updated", sync);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("econ-admin-store-updated", sync);
-    };
-  }, []);
-
-  const api = useMemo(
+  return useMemo(
     () => ({
-      ready,
-      store,
-      replace(next: AdminStore) {
-        setStore(next);
-        writeStore(next);
+      ready: platform.ready,
+      store: {
+        exams: platform.store.exams,
+        groups: platform.store.groups.map((item) => ({
+          code: item.code,
+          title: item.title,
+          note: item.incentiveText || item.aiPenaltyText,
+          probability: String(item.probability),
+        })),
+        papers: platform.store.papers.map((item) => ({
+          id: item.id,
+          title: item.title,
+          sections: item.sections.join(" / "),
+          note: item.note,
+        })),
+        sessions: platform.store.sessions.map((item) => ({
+          id: item.id,
+          name: item.name,
+          room: item.room,
+          capacity: `${item.capacity} 人`,
+          progress: item.status,
+        })),
+        participants: platform.store.participants.map((item) => ({
+          id: item.id,
+          password: item.password,
+          name: item.name,
+          session: item.session,
+          group: item.group,
+          paper: item.paper,
+          status: item.status,
+          abnormal:
+            platform.store.progress.find((progress) => progress.participantId === item.id)?.abnormalLogs
+              .slice(-1)[0] ?? "无",
+        })),
+        exportSets: [
+          {
+            title: "完整平台数据",
+            detail: "包含后台配置、被试进度、任务答案、AI 会话、异常行为和最终提交。",
+          },
+        ],
+        submissions: platform.store.submissions,
       },
-      reset() {
-        setStore(defaultStore);
-        writeStore(defaultStore);
-      },
+      reset: platform.reset,
       setExams(exams: ExamRecord[]) {
-        const next = { ...store, exams };
-        setStore(next);
-        writeStore(next);
+        platform.update(
+          "exams",
+          exams.map((item, index) => ({
+            id: item.id ?? platform.store.exams[index]?.id ?? `exam-${index + 1}`,
+            name: item.name,
+            status: item.status,
+            participants: item.participants,
+            tasks: item.tasks,
+            questionnaires: item.questionnaires,
+            incentiveNote: item.incentiveNote ?? platform.store.exams[index]?.incentiveNote ?? "",
+          }))
+        );
       },
       setGroups(groups: GroupRecord[]) {
-        const next = { ...store, groups };
-        setStore(next);
-        writeStore(next);
+        platform.update(
+          "groups",
+          groups.map((item, index) => ({
+            ...platform.store.groups[index],
+            code: item.code,
+            title: item.title,
+            incentiveText: item.note,
+            probability: Number(item.probability) || 0,
+          }))
+        );
       },
       setPapers(papers: PaperRecord[]) {
-        const next = { ...store, papers };
-        setStore(next);
-        writeStore(next);
+        platform.update(
+          "papers",
+          papers.map((item, index) => ({
+            id: item.id ?? platform.store.papers[index]?.id ?? `paper-${index + 1}`,
+            title: item.title,
+            sections: item.sections
+              .split("/")
+              .map((section) => section.trim())
+              .filter(Boolean),
+            taskIds: platform.store.papers[index]?.taskIds ?? ["task-1", "task-2", "task-3"],
+            note: item.note,
+          }))
+        );
       },
       setSessions(sessions: SessionRecord[]) {
-        const next = { ...store, sessions };
-        setStore(next);
-        writeStore(next);
+        platform.update(
+          "sessions",
+          sessions.map((item, index) => ({
+            id: item.id ?? platform.store.sessions[index]?.id ?? `session-${index + 1}`,
+            name: item.name,
+            room: item.room,
+            capacity: Number(String(item.capacity).replace(/\D/g, "")) || 0,
+            status: item.progress,
+          }))
+        );
       },
       setParticipants(participants: ParticipantRecord[]) {
-        const next = { ...store, participants };
-        setStore(next);
-        writeStore(next);
+        platform.update(
+          "participants",
+          participants.map((item) => ({
+            id: item.id,
+            password: item.password,
+            name: item.name || item.id,
+            session: item.session,
+            group: item.group,
+            paper: item.paper,
+            status: item.status,
+          }))
+        );
       },
     }),
-    [ready, store]
+    [platform]
   );
-
-  return api;
 }

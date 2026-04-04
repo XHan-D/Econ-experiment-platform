@@ -11,6 +11,7 @@ export default function AdminPage() {
     { label: "已配置组别", value: String(store.groups.length) },
     { label: "待用试卷", value: String(store.papers.length) },
     { label: "被试账号", value: String(store.participants.length) },
+    { label: "正式提交", value: String(store.submissions.length) },
   ];
 
   return (
@@ -20,7 +21,7 @@ export default function AdminPage() {
     >
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
             {overviewStats.map((item) => (
               <article key={item.label} className="rounded-[28px] border border-white/60 bg-white/80 p-6 shadow-lg">
                 <p className="text-xs uppercase tracking-[0.22em] text-stone-500">{item.label}</p>
