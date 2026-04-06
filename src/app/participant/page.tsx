@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { usePlatformStore, type AiMessage } from "@/app/use-platform-store";
+import { usePlatformStore, type AiMessage, type TaskProgress } from "@/app/use-platform-store";
 
 const stageLabels = ["知情同意", "基本信息", "任务一", "任务一反馈", "任务二", "任务二反馈", "任务三", "任务三反馈", "最终问卷", "完成提交"];
 
@@ -206,7 +206,9 @@ export default function ParticipantPage() {
                       <textarea
                         value={currentTaskProgress?.answer ?? ""}
                         onChange={(event) => {
-                          const nextTaskProgress = progress.taskProgress.map((item, index) => index === currentTaskIndex ? { ...item, answer: event.target.value } : item);
+                          const nextTaskProgress: TaskProgress[] = progress.taskProgress.map((item, index) =>
+                            index === currentTaskIndex ? { ...item, answer: event.target.value } : item
+                          );
                           persist({ ...progress, taskProgress: nextTaskProgress });
                         }}
                         className="mt-6 min-h-[320px] w-full rounded-[28px] border border-stone-200 bg-white px-5 py-4 text-sm leading-7 outline-none"
@@ -220,7 +222,9 @@ export default function ParticipantPage() {
                           <button
                             disabled={!group.aiEnabled}
                             onClick={() => {
-                              const nextTaskProgress = progress.taskProgress.map((item, index) => index === currentTaskIndex ? { ...item, usedAi: !item.usedAi } : item);
+                              const nextTaskProgress: TaskProgress[] = progress.taskProgress.map((item, index) =>
+                                index === currentTaskIndex ? { ...item, usedAi: !item.usedAi } : item
+                              );
                               persist({ ...progress, taskProgress: nextTaskProgress });
                             }}
                             className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
@@ -245,7 +249,7 @@ export default function ParticipantPage() {
                             <button
                               onClick={() => {
                                 if (!draftMessage.trim()) return;
-                                const nextTaskProgress = progress.taskProgress.map((item, index) =>
+                                const nextTaskProgress: TaskProgress[] = progress.taskProgress.map((item, index) =>
                                   index === currentTaskIndex
                                     ? {
                                         ...item,
@@ -280,7 +284,9 @@ export default function ParticipantPage() {
                   <textarea
                     value={currentTaskProgress?.reflection ?? ""}
                     onChange={(event) => {
-                      const nextTaskProgress = progress.taskProgress.map((item, index) => index === currentTaskIndex ? { ...item, reflection: event.target.value } : item);
+                      const nextTaskProgress: TaskProgress[] = progress.taskProgress.map((item, index) =>
+                        index === currentTaskIndex ? { ...item, reflection: event.target.value } : item
+                      );
                       persist({ ...progress, taskProgress: nextTaskProgress });
                     }}
                     className="mt-6 min-h-[220px] w-full rounded-[28px] border border-stone-200 bg-white px-5 py-4 text-sm leading-7 outline-none"
